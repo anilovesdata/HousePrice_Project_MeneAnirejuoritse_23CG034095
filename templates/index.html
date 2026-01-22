@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="House Price Prediction System using Machine Learning">
+    <meta name="author" content="Your Name">
+    <title>House Price Prediction System</title>
+    
+    <!-- External CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏡 House Price Predictor</h1>
+            <p>Enter property details to estimate the sale price</p>
+        </div>
+
+        <form id="predictionForm">
+            <div class="form-group">
+                <label for="overall_qual">
+                    Overall Quality (1-10) <span class="required">*</span>
+                </label>
+                <input type="number" id="overall_qual" name="overall_qual" 
+                       min="1" max="10" step="1" required>
+                <div class="input-hint">Material and finish quality of the house</div>
+            </div>
+
+            <div class="form-group">
+                <label for="gr_liv_area">
+                    Above Ground Living Area (sq ft) <span class="required">*</span>
+                </label>
+                <input type="number" id="gr_liv_area" name="gr_liv_area" 
+                       min="0" step="1" required>
+                <div class="input-hint">Total square footage above ground</div>
+            </div>
+
+            <div class="form-group">
+                <label for="total_bsmt_sf">Total Basement Area (sq ft)</label>
+                <input type="number" id="total_bsmt_sf" name="total_bsmt_sf" 
+                       min="0" step="1" value="0">
+                <div class="input-hint">Total basement square footage (optional)</div>
+            </div>
+
+            <div class="grid-2">
+                <div class="form-group">
+                    <label for="garage_cars">Garage Size (cars)</label>
+                    <input type="number" id="garage_cars" name="garage_cars" 
+                           min="0" max="5" step="1" value="0">
+                </div>
+
+                <div class="form-group">
+                    <label for="year_built">
+                        Year Built <span class="required">*</span>
+                    </label>
+                    <input type="number" id="year_built" name="year_built" 
+                           min="1800" max="2025" step="1" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="neighborhood">
+                    Neighborhood <span class="required">*</span>
+                </label>
+                <select id="neighborhood" name="neighborhood" required>
+                    <option value="">Select a neighborhood</option>
+                    {% for neighborhood in neighborhoods %}
+                    <option value="{{ neighborhood }}">{{ neighborhood }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <button type="submit" class="btn-predict" id="predictBtn">
+                Predict House Price
+            </button>
+        </form>
+
+        <div class="loading" id="loading">
+            <div class="loading-spinner"></div>
+            <p>Calculating price...</p>
+        </div>
+
+        <div class="result-container" id="resultContainer">
+            <div class="result-label">Estimated Sale Price</div>
+            <div class="predicted-price" id="predictedPrice">$0</div>
+        </div>
+
+        <div class="footer">
+            <p>&copy; 2026 House Price Predictor | Built with Flask &amp; Random Forest</p>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('predictionForm');
+        const resultContainer = document.getElementById('resultContainer');
+        const predictedPrice = document.getElementById('predictedPrice');
+        const loading = document.getElementById('loading');
+        const predictBtn = document.getElementById('predictBtn');
+
+        // Set default year to current year - 10
+        document.getElementById('year_built').value = new Date().getFullYear() - 10;
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            // Hide previous results
+            resultContainer.style.display = 'none';
+            resultContainer.classList.remove('success', 'error');
+            
+            // Show loading
+            loading.style.display = 'block';
+            predictBtn.disabled = true;
+
+            // Get form data
+            const formData = new FormData(form);
+
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                // Hide loading
+                loading.style.display = 'none';
+                predictBtn.disabled = false;
+
+                // Show result
+                resultContainer.style.display = 'block';
+
+                if (data.success) {
+                    resultContainer.classList.add('success');
+                    predictedPrice.textContent = data.predicted_price;
+                    predictedPrice.classList.remove('error-message');
+                } else {
+                    resultContainer.classList.add('error');
+                    predictedPrice.textContent = data.error || 'Prediction failed';
+                    predictedPrice.classList.add('error-message');
+                }
+            } catch (error) {
+                loading.style.display = 'none';
+                predictBtn.disabled = false;
+                resultContainer.style.display = 'block';
+                resultContainer.classList.add('error');
+                predictedPrice.textContent = 'Network error. Please try again.';
+                predictedPrice.classList.add('error-message');
+                console.error('Error:', error);
+            }
+        });
+
+        // Input validation feedback
+        const inputs = document.querySelectorAll('input[required]');
+        inputs.forEach(input => {
+            input.addEventListener('blur', function() {
+                if (this.validity.valid) {
+                    this.style.borderColor = '#28a745';
+                } else if (this.value !== '') {
+                    this.style.borderColor = '#dc3545';
+                }
+            });
+        });
+    </script>
+</body>
+</html>

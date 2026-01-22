@@ -1,0 +1,6 @@
+Name: Mene Anirejuoritse Nicole
+Matric Number: 23CG034021
+Machine Learning Algorithm Used: Random Forest Regressor
+Model Persistence Method Used: Joblib
+Live URL of the Hosted Application: [Your Render/PythonAnywhere/Streamlit URL]
+GitHub Repository Link: https://github.com/anilovesdata/HousePrice_Project_MeneAnirejuoritse_23CG034095
